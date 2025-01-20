@@ -20,7 +20,8 @@ def generate_launch_description():
           'subscribe_depth':True,
           'subscribe_odom_info':True,
           'approx_sync':False,
-          'wait_imu_to_init':True}]
+          'wait_imu_to_init':True,
+          }]
 
     remappings=[
           ('imu', '/imu/data'),
@@ -60,9 +61,9 @@ def generate_launch_description():
 
         Node(
             package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=parameters,
+            parameters=parameters + [{'database_path':'environments/rtabmap.db'}],
             remappings=remappings,
-            arguments=['-d']),
+            arguments=['-d' ]),
 
         Node(
             package='rtabmap_viz', executable='rtabmap_viz', output='screen',
