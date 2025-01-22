@@ -94,3 +94,31 @@ rm -rf ~/.ros/rtabmap.db
 
 
 ros2 launch  realsense_d435i_launch.py
+
+
+########################################" building rtabmap with opengl for multi camera odometry ###########################################
+
+# build opnegl 
+git clone https://github.com/laurentkneip/opengv.git
+
+mkdir opengv/build
+cd opengv/build
+cmake ..
+make
+sudo make install
+
+# Rebuild RTAB-Map with OpenGV
+export G2O_DIR=/usr/local
+https://github.com/introlab/rtabmap_ros/tree/humble-devel
+
+
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release   -DWITH_OPENGV=ON  -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON
+
+
+===> bashrc 
+
+source /opt/ros/humble/setup.bash
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+
+
