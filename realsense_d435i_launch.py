@@ -34,6 +34,7 @@ def generate_launch_description():
                 '/rs_launch.py']),
                 launch_arguments={'camera_namespace': '',
                                   'camera_name': 'camera1',
+                                #   'serial_no':str('042222071132'),
                                   'enable_gyro': 'true',
                                   'enable_accel': 'true',
                                   'unite_imu_method': '2',
@@ -65,6 +66,7 @@ def generate_launch_description():
                 '/rs_launch.py']),
                 launch_arguments={'camera_namespace': '',
                                   'camera_name': 'camera2',
+                                #   'serial_no':str('036522072529'),
                                   'enable_gyro': 'true',
                                   'enable_accel': 'true',
                                   'unite_imu_method': '2',
@@ -146,6 +148,8 @@ def generate_launch_description():
             }],
         remappings=[('/rgbd_image0','/camera1/rgbd_image'),
         ('/rgbd_image1','/camera2/rgbd_image'),
+         ('/camera2/rgb/image', '/camera2/color/image_raw'),
+        
         ('/imu','/imu/data')],# this needs to be fixed combine imus ?? 
         ),
 
@@ -183,6 +187,8 @@ def generate_launch_description():
                 }],
             remappings=[('/rgbd_image0','/camera1/rgbd_image'),
         ('/rgbd_image1','/camera2/rgbd_image'),
+          ('/camera2/rgb/camera_info', '/camera2/color/camera_info'),
+          ('/camera2/depth/image', '/camera2/aligned_depth_to_color/image_raw'),
         ('/imu','/imu/data')],# this needs to be fixed combine imus ?? 
        ),
 
