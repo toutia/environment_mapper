@@ -1,3 +1,55 @@
-__pycache__
 
+
+# Ignore build and installation directories
+/build/
+/install/
+/log/
+/install_*  # Sometimes additional install directories are created
+
+# Ignore colcon-related files
+.colcon
+colcon.log
+colcon_cache/
+
+# Ignore Python cache and compiled files
+__pycache__/
+*.py[cod]
+
+# Ignore temporary files and OS-specific files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Ignore editor and IDE-specific files
+.vscode/
+.idea/
+*.iml
+*.code-workspace
+
+# Ignore generated documentation (e.g., Sphinx or Doxygen)
+/docs/_build/
+/docs/html/
+
+# Ignore debugging files
+*.core
+*.stackdump
+*.crash
+
+# Ignore ROS 2 log files
+/log/latest/
+
+# Ignore test and coverage files
+/tests/results/
+.coverage
+.coverage.*
+.cache/
+
+# Ignore environment configuration files
+.env
+.env.*
+*.local
+
+# ignore databases 
 **/*.db
