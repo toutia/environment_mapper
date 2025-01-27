@@ -131,6 +131,22 @@ def generate_launch_description():
       ]),
 
 
+      Node(
+            package='rtabmap_sync', executable='rgbdx_sync', output='screen',namespace='cameras',name='rgbdx_sync',
+            parameters=[{
+                'approx_sync':True,
+                'approx_sync_max_interval':0.01,
+                'rgbd_cameras':2,
+                }],
+            remappings=[
+     
+          ('rgbd_image0', '/camera1/rgbd_image'),
+          ('rgbd_image1', '/camera2/rgbd_image'),
+ 
+
+      ]),
+
+
         # Node(
         # package='rtabmap_odom', executable='rgbd_odometry', output='screen',
         # parameters=[{
