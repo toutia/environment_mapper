@@ -91,14 +91,14 @@ class ObjectDetectionPipeline:
             sys.stderr.write(" Unable to create egl sink \n")
         sink.set_property("sync", False)
 
-        caps_v4l2src.set_property('caps', Gst.Caps.from_string("video/x-raw, framerate=30/1, width=1280, height=720, format=RGB"))
+        caps_v4l2src.set_property('caps', Gst.Caps.from_string("video/x-raw, framerate=30/1, width=1280, height=1440, format=RGB"))
         caps_vidconvsrc.set_property('caps', Gst.Caps.from_string("video/x-raw(memory:NVMM)"))
         source.set_property("is-live", True)
         source.set_property("format", Gst.Format.TIME)
 
         nvvidconvsrc.set_property('compute-hw',1)
         streammux.set_property('width', 1280)  # 1920 is a standard 16:9 full HD resolution
-        streammux.set_property('height', 720)  # Similarly, for 1080p
+        streammux.set_property('height', 1440)  # Similarly, for 1080p
         streammux.set_property('batch-size', 1)
         streammux.set_property('batched-push-timeout', 10000)
         pgie.set_property('config-file-path', os.path.join(os.path.dirname(__file__),  "pgie_config.txt"))

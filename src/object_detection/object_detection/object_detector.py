@@ -3,7 +3,7 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 from std_srvs.srv import Empty
-from rtabmap_msgs.msg import RGBDImage
+from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import sys 
 import os
@@ -20,7 +20,7 @@ class ObjectDetector(Node):
         self.detections  = self.create_publisher(String, '/detections', 10)
         self.pipeline_start_service = self.create_service(Empty, 'start_pipeline', self.start_pipeline)
         self.pipeline_stop_service = self.create_service(Empty, 'stop_pipeline', self.stop_pipeline)
-        self.input_images = self.create_subscription(RGBDImage,'/camera1/rgbd_image',self.on_new_frame,10)
+        self.input_images = self.create_subscription(Image,'/merged/rgbd_image',self.on_new_frame,10)
         self.bridge = CvBridge()
         self.pipeline.start()
         
@@ -30,9 +30,9 @@ class ObjectDetector(Node):
     def on_new_frame(self, msg):
         
         # Convert ROS Image message to OpenCV (NumPy array)
-        color_frame = self.bridge.imgmsg_to_cv2(msg.rgb, desired_encoding='bgr8')  # Use 'rgb8' or other encoding if necessary
-        depth_frame =  self.bridge.imgmsg_to_cv2(msg.depth, desired_encoding='passthrough')
-        # self.get_logger().info(f"Received image with shape: {color_frame.shape} and dtype: {color_frame.dtype}")
+        color_frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')  # Use 'rgb8' or other encoding if necessary
+        depth_frame =  None
+        self.get_logger().info(f"Received image with shape: {color_frame.shape} and dtype: {color_frame.dtype}")
         # self.get_logger().info(f"Received depth with shape: {depth_frame.shape} and dtype: {depth_frame.dtype} ")
         
 

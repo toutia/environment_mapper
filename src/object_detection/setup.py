@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'object_detector = object_detection.object_detector:main',
-             'object_labeler = object_detection.object_labeler:main'
+             'object_labeler = object_detection.object_labeler:main',
+             'rgbd_merger = object_detection.rgbd_merger:main',
         ],
     },
 )
