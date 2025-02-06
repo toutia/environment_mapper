@@ -1,37 +1,40 @@
 import gi
-gi.require_version('Gst', '1.0')
-from gi.repository import  Gst,GLib
+
+gi.require_version("Gst", "1.0")
+from gi.repository import Gst, GLib
 from threading import Thread, Lock
 import configparser
 import pyds
 import numpy as np
-import os 
+import os
 import sys
 
-class ObjectDetectionPipeline:
 
+class ObjectDetectionPipeline:
 
     def __init__(self):
 
         Gst.init(None)
-        self.pipeline=Gst.Pipeline()
+        self.pipeline = Gst.Pipeline()
         self.loop = GLib.MainLoop()
-        self.target_object= 'person'
-        self.lables=[]
+        self.target_object = "person"
+        self.lables = []
         self.init_pipeline()
-        self.depth_buffer=None
-        self.depth_lock=Lock()
-        self.depth_unit= 0.0010000000474974513
-        
-    def get_by_name(self, name):
-        return self.pipeline.get_by_name(name)    
+        self.depth_buffer = None
+        self.depth_lock = Lock()
+        self.depth_unit = 0.0010000000474974513
 
-    
-    def load_labels(self, file_path=os.path.join(os.path.dirname(__file__), "Primary_Detector/labels.txt")):
+    def get_by_name(self, name):
+        return self.pipeline.get_by_name(name)
+
+    def load_labels(
+        self,
+        file_path=os.path.join(
+            os.path.dirname(__file__), "Primary_Detector/labels.txt"
+        ),
+    ):
         with open(file_path, "r") as f:
             self.labels = [line.strip() for line in f.readlines()]
-        
-
 
     def init_pipeline(self):
 
@@ -39,12 +42,11 @@ class ObjectDetectionPipeline:
 
         source = Gst.ElementFactory.make("appsrc", "rs-source")
         if not source:
-            sys.stderr.write(" Unable to create Source \n")  
+            sys.stderr.write(" Unable to create Source \n")
 
         caps_v4l2src = Gst.ElementFactory.make("capsfilter", "v4l2src_caps")
         if not caps_v4l2src:
             sys.stderr.write(" Unable to create v4l2src capsfilter \n")
-
 
         vidconvsrc = Gst.ElementFactory.make("videoconvert", "convertor_src1")
         if not vidconvsrc:
@@ -69,7 +71,6 @@ class ObjectDetectionPipeline:
         pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
         if not pgie:
             sys.stderr.write(" Unable to create pgie \n")
-        
 
         tracker = Gst.ElementFactory.make("nvtracker", "tracker")
         if not tracker:
@@ -85,43 +86,55 @@ class ObjectDetectionPipeline:
         if not nvosd:
             sys.stderr.write(" Unable to create nvosd \n")
 
-        # redirect to defaulmt diplay 
+        # redirect to defaulmt diplay
         sink = Gst.ElementFactory.make("nv3dsink", "nv3d-sink")
         if not sink:
             sys.stderr.write(" Unable to create egl sink \n")
         sink.set_property("sync", False)
 
-        caps_v4l2src.set_property('caps', Gst.Caps.from_string("video/x-raw, framerate=30/1, width=1280, height=1440, format=RGB"))
-        caps_vidconvsrc.set_property('caps', Gst.Caps.from_string("video/x-raw(memory:NVMM)"))
+        caps_v4l2src.set_property(
+            "caps",
+            Gst.Caps.from_string(
+                "video/x-raw, framerate=30/1, width=1280, height=1440, format=RGB"
+            ),
+        )
+        caps_vidconvsrc.set_property(
+            "caps", Gst.Caps.from_string("video/x-raw(memory:NVMM)")
+        )
         source.set_property("is-live", True)
         source.set_property("format", Gst.Format.TIME)
 
-        nvvidconvsrc.set_property('compute-hw',1)
-        streammux.set_property('width', 1280)  # 1920 is a standard 16:9 full HD resolution
-        streammux.set_property('height', 1440)  # Similarly, for 1080p
-        streammux.set_property('batch-size', 1)
-        streammux.set_property('batched-push-timeout', 10000)
-        pgie.set_property('config-file-path', os.path.join(os.path.dirname(__file__),  "pgie_config.txt"))
-        #Set properties of tracker
+        nvvidconvsrc.set_property("compute-hw", 1)
+        streammux.set_property(
+            "width", 1280
+        )  # 1920 is a standard 16:9 full HD resolution
+        streammux.set_property("height", 1440)  # Similarly, for 1080p
+        streammux.set_property("batch-size", 1)
+        streammux.set_property("batched-push-timeout", 10000)
+        pgie.set_property(
+            "config-file-path",
+            os.path.join(os.path.dirname(__file__), "pgie_config.txt"),
+        )
+        # Set properties of tracker
         config = configparser.ConfigParser()
-        config.read(os.path.join(os.path.dirname(__file__), 'tracker_config.txt'))
+        config.read(os.path.join(os.path.dirname(__file__), "tracker_config.txt"))
         config.sections()
-        for key in config['tracker']:
-            if key == 'tracker-width' :
-                tracker_width = config.getint('tracker', key)
-                tracker.set_property('tracker-width', tracker_width)
-            if key == 'tracker-height' :
-                tracker_height = config.getint('tracker', key)
-                tracker.set_property('tracker-height', tracker_height)
-            if key == 'gpu-id' :
-                tracker_gpu_id = config.getint('tracker', key)
-                tracker.set_property('gpu_id', tracker_gpu_id)
-            if key == 'll-lib-file' :
-                tracker_ll_lib_file = config.get('tracker', key)
-                tracker.set_property('ll-lib-file', tracker_ll_lib_file)
-            if key == 'll-config-file' :
-                tracker_ll_config_file = config.get('tracker', key)
-                tracker.set_property('ll-config-file', tracker_ll_config_file)
+        for key in config["tracker"]:
+            if key == "tracker-width":
+                tracker_width = config.getint("tracker", key)
+                tracker.set_property("tracker-width", tracker_width)
+            if key == "tracker-height":
+                tracker_height = config.getint("tracker", key)
+                tracker.set_property("tracker-height", tracker_height)
+            if key == "gpu-id":
+                tracker_gpu_id = config.getint("tracker", key)
+                tracker.set_property("gpu_id", tracker_gpu_id)
+            if key == "ll-lib-file":
+                tracker_ll_lib_file = config.get("tracker", key)
+                tracker.set_property("ll-lib-file", tracker_ll_lib_file)
+            if key == "ll-config-file":
+                tracker_ll_config_file = config.get("tracker", key)
+                tracker.set_property("ll-config-file", tracker_ll_config_file)
 
         print("Adding elements to Pipeline \n")
         self.pipeline.add(source)
@@ -135,8 +148,6 @@ class ObjectDetectionPipeline:
         self.pipeline.add(nvvidconv)
         self.pipeline.add(nvosd)
         self.pipeline.add(sink)
-
-
 
         print("Linking elements in the Pipeline \n")
         source.link(caps_v4l2src)
@@ -156,12 +167,9 @@ class ObjectDetectionPipeline:
         nvvidconv.link(nvosd)
         nvosd.link(sink)
 
-
-
-        
         bus = self.pipeline.get_bus()
         bus.add_signal_watch()
-        bus.connect ("message", self.bus_call)
+        bus.connect("message", self.bus_call)
 
         # Lets add probe to get informed of the meta data generated, we add probe to
         # the sink pad of the osd element, since by that time, the buffer would have
@@ -169,7 +177,7 @@ class ObjectDetectionPipeline:
         osdsinkpad = nvosd.get_static_pad("sink")
         if not osdsinkpad:
             sys.stderr.write(" Unable to get sink pad of nvosd \n")
-        # passing the pitch element here to be able to control it dynamically 
+        # passing the pitch element here to be able to control it dynamically
         osdsinkpad.add_probe(Gst.PadProbeType.BUFFER, self.osd_sink_pad_buffer_probe)
 
     def start(self):
@@ -178,14 +186,14 @@ class ObjectDetectionPipeline:
 
         # Start the main loop in a separate thread
         Thread(target=self.loop.run, daemon=True).start()
-          
+
     def stop(self):
 
         self.pipeline.set_state(Gst.State.NULL)
         self.loop.quit()
 
     def set_target(self, target_object):
-        self.target_object=target_object
+        self.target_object = target_object
 
     def bus_call(self, bus, message):
         t = message.type
@@ -201,8 +209,8 @@ class ObjectDetectionPipeline:
             self.loop.quit()
         return True
 
-    def osd_sink_pad_buffer_probe(self,pad, info):
-        
+    def osd_sink_pad_buffer_probe(self, pad, info):
+
         frame_number = 0
         # Initialize object counter for all classes
         obj_counter = {class_id: 0 for class_id in range(len(self.labels))}
@@ -212,18 +220,16 @@ class ObjectDetectionPipeline:
         if not gst_buffer:
             print("Unable to get GstBuffer")
             return
-        
 
         # Fetch and process the latest depth frame corresponding to the current GStreamer pipeline's probe
         with self.depth_lock:
-            current_depth = self.depth_buffer.copy() if self.depth_buffer is not None else None
+            current_depth = (
+                self.depth_buffer.copy() if self.depth_buffer is not None else None
+            )
 
         if current_depth is None:
             print("No depth data available yet.")
             return Gst.PadProbeReturn.OK
-
-        
-
 
         # Retrieve batch metadata from the gst_buffer
         batch_meta = pyds.gst_buffer_get_nvds_batch_meta(hash(gst_buffer))
@@ -233,8 +239,6 @@ class ObjectDetectionPipeline:
         display_meta.num_labels = 1
         py_nvosd_text_params = display_meta.text_params[0]
 
-
-
         l_frame = batch_meta.frame_meta_list
         while l_frame is not None:
             try:
@@ -242,7 +246,7 @@ class ObjectDetectionPipeline:
             except StopIteration:
                 break
             target_found = False
-            average_depth= 6
+            average_depth = 6
             # timestamp= frame_meta.ntp_timestamp
             # print(timestamp)
             frame_number = frame_meta.frame_num
@@ -259,28 +263,34 @@ class ObjectDetectionPipeline:
                 # Use the class label from labels.txt
                 class_name = self.labels[obj_meta.class_id]
 
-                if class_name == self.target_object :
-                        target_found = True
-                        # Extract bounding box coordinates
-                        left = int(obj_meta.rect_params.left)
-                        top = int(obj_meta.rect_params.top)
-                        width = int(obj_meta.rect_params.width)
-                        height = int(obj_meta.rect_params.height)
+                if class_name == self.target_object:
+                    target_found = True
+                    # Extract bounding box coordinates
+                    left = int(obj_meta.rect_params.left)
+                    top = int(obj_meta.rect_params.top)
+                    width = int(obj_meta.rect_params.width)
+                    height = int(obj_meta.rect_params.height)
 
-                        if current_depth is not None:
-                            # Define ROI based on bounding box and calculate average depth
-                            target_depth_region = current_depth[top:top + height, left:left + width]
-                            average_depth = np.mean(target_depth_region)* self.depth_unit  # Average depth
-                            print(f"Average depth for target object: {average_depth } meters")
-                            # Calculate center coordinates
-                            # u = left + width // 2
-                            # v = top + height // 2
-                            # spatial_coordinates = get_spatial_coordinates(u, v, average_depth, camera_intrinsics)
-                            # x,y,z= spatial_coordinates
-                            # description= generate_spatial_directive(x,y,z)
-                            # print(description)
+                    if current_depth is not None:
+                        # Define ROI based on bounding box and calculate average depth
+                        target_depth_region = current_depth[
+                            top : top + height, left : left + width
+                        ]
+                        average_depth = (
+                            np.mean(target_depth_region) * self.depth_unit
+                        )  # Average depth
+                        print(
+                            f"Average depth for target object: {average_depth } meters"
+                        )
+                        # Calculate center coordinates
+                        # u = left + width // 2
+                        # v = top + height // 2
+                        # spatial_coordinates = get_spatial_coordinates(u, v, average_depth, camera_intrinsics)
+                        # x,y,z= spatial_coordinates
+                        # description= generate_spatial_directive(x,y,z)
+                        # print(description)
 
-                        break  # Exit
+                    break  # Exit
                 py_nvosd_text_params.display_text = class_name
                 pyds.nvds_add_display_meta_to_frame(frame_meta, display_meta)
 
@@ -289,12 +299,15 @@ class ObjectDetectionPipeline:
                 except StopIteration:
                     break
 
-        
             # Display detected class names and their counts
             detected_classes = [
-                f"{self.labels[class_id]}: {count}" for class_id, count in obj_counter.items() if count > 0
+                f"{self.labels[class_id]}: {count}"
+                for class_id, count in obj_counter.items()
+                if count > 0
             ]
-            summary_text = f"Frame {frame_number}, Objects: {num_rects}\n" + ", ".join(detected_classes)
+            summary_text = f"Frame {frame_number}, Objects: {num_rects}\n" + ", ".join(
+                detected_classes
+            )
             py_nvosd_text_params.display_text = summary_text
             py_nvosd_text_params.x_offset = 10
             py_nvosd_text_params.y_offset = 12
@@ -355,17 +368,9 @@ class ObjectDetectionPipeline:
         #     except StopIteration:
         #         break
 
-
         return Gst.PadProbeReturn.OK
 
-if __name__=='__main__':
-    pipeline= ObjectDetectionPipeline()
+
+if __name__ == "__main__":
+    pipeline = ObjectDetectionPipeline()
     pipeline.start()
-    
-
-
-
-
-
-
-    
