@@ -17,8 +17,6 @@ from launch.actions import DeclareLaunchArgument, OpaqueFunction
 
 
 configurable_parameters = [
-
-  
     {
         "name": "usb_port_id",
         "default": "''",
@@ -55,7 +53,7 @@ configurable_parameters = [
     {"name": "enable_color", "default": "true", "description": "enable color stream"},
     {
         "name": "rgb_camera.color_profile",
-        "default": "0,0,0",
+        "default": "848,480,60",
         "description": "color stream profile",
     },
     {
@@ -69,7 +67,11 @@ configurable_parameters = [
         "description": "enable/disable auto exposure for color image",
     },
     {"name": "enable_depth", "default": "true", "description": "enable depth stream"},
-    {"name": "enable_infra", "default": "false", "description": "enable infra0 stream"},
+    {
+        "name": "enable_infra",
+        "default": "false",
+        "description": "enable infra60 stream",
+    },
     {
         "name": "enable_infra1",
         "default": "false",
@@ -82,7 +84,7 @@ configurable_parameters = [
     },
     {
         "name": "depth_module.depth_profile",
-        "default": "0,0,0",
+        "default": "848,480,60",
         "description": "depth stream profile",
     },
     {
@@ -151,7 +153,7 @@ configurable_parameters = [
         "description": "Depth module second gain value. Used for hdr_merge filter",
     },
     {"name": "enable_sync", "default": "true", "description": "'enable sync mode'"},
-    {"name": "enable_rgbd", "default": "true", "description": "'enable rgbd topic'"},
+    {"name": "enable_rgbd", "default": "false", "description": "'enable rgbd topic'"},
     {"name": "enable_gyro", "default": "true", "description": "'enable gyro stream'"},
     {
         "name": "enable_accel",
@@ -247,7 +249,7 @@ configurable_parameters = [
     },
     {
         "name": "reconnect_timeout",
-        "default": "6.",
+        "default": "2.",
         "description": "Timeout(seconds) between consequtive reconnection attempts",
     },
 ]
@@ -274,22 +276,22 @@ def generate_launch_description():
 
     return LaunchDescription(
         # Launch arguments*
-        declare_configurable_parameters(configurable_parameters)+
-        [SetParameter(name="depth_module.emitter_enabled", value=1)]
+        declare_configurable_parameters(configurable_parameters)
+        + [SetParameter(name="depth_module.emitter_enabled", value=1)]
         + [
             Node(
                 package="realsense2_camera",
                 executable="realsense2_camera_node",
-                namespace='',
-                name='camera1',
+                namespace="",
+                name="camera1",
                 output="screen",
-                parameters= [set_configurable_parameters(configurable_parameters)],
+                parameters=[set_configurable_parameters(configurable_parameters)],
                 arguments=[
                     "--ros-args",
                     "--log-level",
                     "info",
                     "-p",
-                    "serial_no:='042222071132'",
+                    "serial_no:='036522072529'",
                     "-p",
                     "camera_name:='camera1'",
                 ],  # Specify the serial number
@@ -322,19 +324,18 @@ def generate_launch_description():
             Node(
                 package="realsense2_camera",
                 executable="realsense2_camera_node",
-                namespace='',
-                name='camera2',
-                parameters= [set_configurable_parameters(configurable_parameters)],
+                namespace="",
+                name="camera2",
+                parameters=[set_configurable_parameters(configurable_parameters)],
                 output="screen",
                 arguments=[
                     "--ros-args",
                     "--log-level",
                     "info",
                     "-p",
-                    "serial_no:='036522072529'",
+                    "serial_no:='042222071132'",
                     "-p",
                     "camera_name:='camera2'",
-           
                 ],  # Specify the serial number
                 emulate_tty=True,
             ),
@@ -344,15 +345,15 @@ def generate_launch_description():
                 executable="static_transform_publisher",
                 arguments=[
                     "--x",
-                    "0",  # X translation
+                    "-0.018",  # X translation
                     "--y",
-                    "0.06",  # Y translation
+                    "0",  # Y translation
                     "--z",
-                    "-0.018",  # Z translation
+                    "-0.071",  # Z translation
                     "--roll",
                     "0",  # -0.279 Roll rotation
                     "--pitch",
-                    "0.6",  # Pitch rotation
+                    "0.4",  # Pitch rotation
                     "--yaw",
                     "0",  # Yaw rotation
                     "--frame-id",
@@ -372,12 +373,12 @@ def generate_launch_description():
                     {
                         # 'frame_id':'camera_link',
                         "approx_sync": True,
-                        "approx_sync_max_interval": 0.01,
+                        "approx_sync_max_interval": 0.1,
                         "subscribe_rgbd": True,
                         "rgbd_cameras": 2,
                         "wait_imu_to_init": True,
-                        # 'topic_queue_size' : 100,
-                        # 'sync_queue_size'  : 100
+                        "topic_queue_size": 10,
+                        "sync_queue_size": 10,
                     }
                 ],
                 remappings=[
@@ -399,12 +400,12 @@ def generate_launch_description():
                     {
                         # 'frame_id':'camera_link',
                         "approx_sync": True,
-                        "approx_sync_max_interval": 0.01,
+                        "approx_sync_max_interval": 0.1,
                         "subscribe_rgbd": True,
                         "rgbd_cameras": 2,
                         "wait_imu_to_init": True,
-                        # 'topic_queue_size' : 100,
-                        # 'sync_queue_size'  : 100
+                        "topic_queue_size": 10,
+                        "sync_queue_size": 10,
                     }
                 ],
                 remappings=[
@@ -425,7 +426,7 @@ def generate_launch_description():
                 parameters=[
                     {
                         "approx_sync": True,
-                        "approx_sync_max_interval": 0.01,
+                        "approx_sync_max_interval": 0.1,
                         "rgbd_cameras": 2,
                     }
                 ],
@@ -435,22 +436,48 @@ def generate_launch_description():
                 ],
             ),
             Node(
+                package="imu_filter_madgwick",
+                executable="imu_filter_madgwick_node",
+                output="screen",
+                parameters=[
+                    {
+                        "use_mag": False,
+                        "world_frame": "enu",
+                        "publish_tf": False,
+                        "topic_queue_size": 10,
+                        "sync_queue_size": 10,
+                    }
+                ],
+                remappings=[("imu/data_raw", "/camera1/imu")],
+            ),
+            Node(
                 package="rtabmap_odom",
                 executable="rgbd_odometry",
                 output="screen",
                 parameters=[
                     {
                         "approx_sync": True,
-                        "approx_sync_max_interval": 0.01,
+                        "approx_sync_max_interval": 0.05,
                         "subscribe_rgbd": True,
                         "publish_tf": True,
                         "rgbd_cameras": 0,
                         "wait_imu_to_init": True,
-                        "Reg/Strategy": "0",  # Set to 1 for 3D-3D registration
-                        "imu_queue_size": 500,
-                        # "odometry_fps": 30,
-                        #    'topic_queue_size' : 100,
-                        # 'sync_queue_size'  : 100
+                        "topic_queue_size": 100,
+                        "sync_queue_size": 100,
+                        "odom_frame_id": "odom",
+                        "publish_tf": True,
+                        # [0=SURF 1=SIFT 2=ORB 3=FAST/FREAK 4=FAST/BRIEF 5=GFTT/FREAK 6=GFTT/BRIEF 7=BRISK 8=GFTT/ORB 9=KAZE 10=ORB-OCTREE 11=SuperPoint 12=SURF/FREAK 13=GFTT/DAISY 14=SURF/DAISY 15=PyDetector]
+                        "Vis/FeatureType": "10",
+                        "Vis/MaxFeatures": "1500",  # Reduce from default 2000
+                        "Vis/MinDepth": "0.3",  # Avoid noise in close range
+                        "Vis/MaxDepth": "5.0",  # Ignore distant keypoints
+                        "Vis/ShowKeypoints": "true",
+                        "Vis/MinInliers": "10",
+                        # [0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D]
+                        "Odom/Strategy": "1",
+                        "Odom/GuessMotion": "false",
+                        "Odom/KeyFrameThr": "0.3",
+                        "ORB/Gpu": "true",
                     }
                 ],
                 remappings=[
@@ -467,16 +494,47 @@ def generate_launch_description():
                         "subscribe_rgbd": True,
                         "rgbd_cameras": 0,
                         "subscribe_odom_info": True,
+                        "subscribe_odom": True,
                         "approx_sync": True,
-                        "approx_sync_max_interval": 0.01,
+                        "approx_sync_max_interval": 0.05,
                         "database_path": "environments/rtabmap.db",
+                        "topic_queue_size": 100,
+                        "sync_queue_size": 100,
+                        "Rtabmap/DetectionRate": "3",
+                        # six degrees of freedom roll and pitch also can
+                        "RGBD/ForceOdom3DoF": "false",
+                        # keypoint strategy without incidence if reusing features from odom
+                        "Kp/DetectorStrategy": "8",
+                        "Kp/NNStrategy": "4",
+                        "Kp/ByteToFloat": "true",
+                        "Kp/DescriptorCaching": "true",
+                        # publish rgbd odometry
+                        "RGBD/PublishOdometry": True,
+                        "RGBD/OptimizeFromGraphEnd": "true",
+                        "RGBD/Force2D": "false",
+                        # odometry  feature REUSE  for loop closure dteetction = odometry computes keypoiçnts and features ...
+                        "Mem/UseOdomFeatures": "true",
+                        # Allow New Map Creation When Odometry Fails
+                        "Rtabmap/CreateNewMapOnFailure": "true",
+                        # Keep Past Maps and Allow Merging
+                        "Rtabmap/StartNewMapOnLoopClosureDetection": "true",
+                        "Mem/DetectSimilar": "true",
+                        # Enable Loop Closures for Automatic Map Linking
+                        "Rtabmap/DetectMoreLoopClosures": "true",
+                        "Rtabmap/LoopClosureHypothesisRatio": "0.2",
+                        # Prevent Data Loss & Optimize Memory
+                        "Mem/NotLinkedNodesKept": "true",
+                        "Mem/STMSize": "100",
+                        "Mem/RehearsalSimilarity": "0.3",
+                        "Odom/ResetCountdown": "50",
                         # update rgbd_cameras = 0 then map /rgbd_images to cameras/rgbd_images
                     }
                 ],
                 remappings=[
                     ("rgbd_images", "/cameras/rgbd_images"),
+                    ("/imu", "/imu/data"),
                 ],
-                arguments=["-d"],
+                arguments=["-d", "--log-level", "debug", "--delete_db_on_start"],
             ),  # this deletes the previous database
             Node(
                 package="rtabmap_viz",
@@ -487,26 +545,19 @@ def generate_launch_description():
                         "subscribe_rgbd": True,
                         "rgbd_cameras": 0,
                         "subscribe_odom_info": True,
+                        "subscribe_odom": True,
+                        "odom_frame_id": "odom",
                         "approx_sync": True,
-                        "approx_sync_max_interval": 0.01,
+                        "approx_sync_max_interval": 0.05,
                         "database_path": "environments/rtabmap.db",
-                        # 'topic_queue_size' : 100,
-                        # 'sync_queue_size'  : 100
+                        "topic_queue_size": 100,
+                        "sync_queue_size": 100,
                     }
                 ],
                 remappings=[
                     ("rgbd_images", "/cameras/rgbd_images"),
                 ],  # this needs to be fixed combine imus ??
             ),
-            # Compute quaternion of the IMU
-            Node(
-                package="imu_filter_madgwick",
-                executable="imu_filter_madgwick_node",
-                output="screen",
-                parameters=[
-                    {"use_mag": False, "world_frame": "enu", "publish_tf": False}
-                ],
-                remappings=[("imu/data_raw", "/camera1/imu")],
-            ),
+            # # Compute quaternion of the IMU
         ]
     )
