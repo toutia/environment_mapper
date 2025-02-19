@@ -349,7 +349,7 @@ def generate_launch_description():
                     "--y",
                     "0",  # Y translation
                     "--z",
-                    "-0.071",  # Z translation
+                    "-0.06",  # Z translation
                     "--roll",
                     "0",  # -0.279 Roll rotation
                     "--pitch",
@@ -450,114 +450,126 @@ def generate_launch_description():
                 ],
                 remappings=[("imu/data_raw", "/camera1/imu")],
             ),
-            Node(
-                package="rtabmap_odom",
-                executable="rgbd_odometry",
-                output="screen",
-                parameters=[
-                    {
-                        "approx_sync": True,
-                        "approx_sync_max_interval": 0.05,
-                        "subscribe_rgbd": True,
-                        "publish_tf": True,
-                        "rgbd_cameras": 0,
-                        "wait_imu_to_init": True,
-                        "topic_queue_size": 100,
-                        "sync_queue_size": 100,
-                        "odom_frame_id": "odom",
-                        "publish_tf": True,
-                        # [0=SURF 1=SIFT 2=ORB 3=FAST/FREAK 4=FAST/BRIEF 5=GFTT/FREAK 6=GFTT/BRIEF 7=BRISK 8=GFTT/ORB 9=KAZE 10=ORB-OCTREE 11=SuperPoint 12=SURF/FREAK 13=GFTT/DAISY 14=SURF/DAISY 15=PyDetector]
-                        "Vis/FeatureType": "10",
-                        "Vis/MaxFeatures": "1500",  # Reduce from default 2000
-                        "Vis/MinDepth": "0.3",  # Avoid noise in close range
-                        "Vis/MaxDepth": "5.0",  # Ignore distant keypoints
-                        "Vis/ShowKeypoints": "true",
-                        "Vis/MinInliers": "10",
-                        # [0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D]
-                        "Odom/Strategy": "1",
-                        "Odom/GuessMotion": "false",
-                        "Odom/KeyFrameThr": "0.3",
-                        "ORB/Gpu": "true",
-                    }
-                ],
-                remappings=[
-                    ("rgbd_images", "/cameras/rgbd_images"),
-                    ("/imu", "/imu/data"),
-                ],  # this needs to be fixed combine imus ??
-            ),
-            Node(
-                package="rtabmap_slam",
-                executable="rtabmap",
-                output="screen",
-                parameters=[
-                    {
-                        "subscribe_rgbd": True,
-                        "rgbd_cameras": 0,
-                        "subscribe_odom_info": True,
-                        "subscribe_odom": True,
-                        "approx_sync": True,
-                        "approx_sync_max_interval": 0.05,
-                        "database_path": "environments/rtabmap.db",
-                        "topic_queue_size": 100,
-                        "sync_queue_size": 100,
-                        "Rtabmap/DetectionRate": "3",
-                        # six degrees of freedom roll and pitch also can
-                        "RGBD/ForceOdom3DoF": "false",
-                        # keypoint strategy without incidence if reusing features from odom
-                        "Kp/DetectorStrategy": "8",
-                        "Kp/NNStrategy": "4",
-                        "Kp/ByteToFloat": "true",
-                        "Kp/DescriptorCaching": "true",
-                        # publish rgbd odometry
-                        "RGBD/PublishOdometry": True,
-                        "RGBD/OptimizeFromGraphEnd": "true",
-                        "RGBD/Force2D": "false",
-                        # odometry  feature REUSE  for loop closure dteetction = odometry computes keypoiçnts and features ...
-                        "Mem/UseOdomFeatures": "true",
-                        # Allow New Map Creation When Odometry Fails
-                        "Rtabmap/CreateNewMapOnFailure": "true",
-                        # Keep Past Maps and Allow Merging
-                        "Rtabmap/StartNewMapOnLoopClosureDetection": "true",
-                        "Mem/DetectSimilar": "true",
-                        # Enable Loop Closures for Automatic Map Linking
-                        "Rtabmap/DetectMoreLoopClosures": "true",
-                        "Rtabmap/LoopClosureHypothesisRatio": "0.2",
-                        # Prevent Data Loss & Optimize Memory
-                        "Mem/NotLinkedNodesKept": "true",
-                        "Mem/STMSize": "100",
-                        "Mem/RehearsalSimilarity": "0.3",
-                        "Odom/ResetCountdown": "50",
-                        # update rgbd_cameras = 0 then map /rgbd_images to cameras/rgbd_images
-                    }
-                ],
-                remappings=[
-                    ("rgbd_images", "/cameras/rgbd_images"),
-                    ("/imu", "/imu/data"),
-                ],
-                arguments=["-d", "--log-level", "debug", "--delete_db_on_start"],
-            ),  # this deletes the previous database
-            Node(
-                package="rtabmap_viz",
-                executable="rtabmap_viz",
-                output="screen",
-                parameters=[
-                    {
-                        "subscribe_rgbd": True,
-                        "rgbd_cameras": 0,
-                        "subscribe_odom_info": True,
-                        "subscribe_odom": True,
-                        "odom_frame_id": "odom",
-                        "approx_sync": True,
-                        "approx_sync_max_interval": 0.05,
-                        "database_path": "environments/rtabmap.db",
-                        "topic_queue_size": 100,
-                        "sync_queue_size": 100,
-                    }
-                ],
-                remappings=[
-                    ("rgbd_images", "/cameras/rgbd_images"),
-                ],  # this needs to be fixed combine imus ??
-            ),
-            # # Compute quaternion of the IMU
+            # Node(
+            #     package="rtabmap_odom",
+            #     executable="rgbd_odometry",
+            #     output="screen",
+            #     parameters=[
+            #         {
+            #             "approx_sync": True,
+            #             "approx_sync_max_interval": 0.05,
+            #             "subscribe_rgbd": True,
+            #             "publish_tf": True,
+            #             "rgbd_cameras": 0,
+            #             "wait_imu_to_init": True,
+            #             "topic_queue_size": 100,
+            #             "sync_queue_size": 100,
+            #             "odom_frame_id": "odom",
+            #             "publish_tf": True,
+            #             # [0=SURF 1=SIFT 2=ORB 3=FAST/FREAK 4=FAST/BRIEF 5=GFTT/FREAK 6=GFTT/BRIEF 7=BRISK 8=GFTT/ORB 9=KAZE 10=ORB-OCTREE 11=SuperPoint 12=SURF/FREAK 13=GFTT/DAISY 14=SURF/DAISY 15=PyDetector]
+            #             "Vis/FeatureType": "1",
+            #             "SIFT/NOctaveLayers": "4",
+            #             "SIFT/PreciseUpscale": "true",
+            #             "SIFT/RootSIFT": "true",
+            #             "SIFT/RootSIFT": "true",
+            #             "SIFT/EdgeThreshold": "7",
+            #             "SIFT/ContrastThreshold": "0.02",
+            #             "SIFT/GaussianThreshold": "1.5",
+            #             "SIFT/Gpu": "true",
+            #             "Vis/MaxFeatures": "1500",  # Reduce from default 2000
+            #             "Vis/MinDepth": "0.3",  # Avoid noise in close range
+            #             "Vis/MaxDepth": "5.0",  # Ignore distant keypoints
+            #             "Vis/ShowKeypoints": "true",
+            #             "Vis/MinInliers": "10",
+            #             "Kp/NNStrategy": "4",
+            #             "Kp/ByteToFloat": "true",
+            #             "Kp/DescriptorCaching": "true",
+            #             # [0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM2 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D]
+            #             "Odom/Strategy": "1",
+            #             "Odom/GuessMotion": "false",
+            #             "Odom/KeyFrameThr": "0.3",
+            #             "ORB/Gpu": "true",
+            #         }
+            #     ],
+            #     remappings=[
+            #         ("rgbd_images", "/cameras/rgbd_images"),
+            #         ("/imu", "/imu/data"),
+            #     ],  # this needs to be fixed combine imus ??
+            # ),
+            # Node(
+            #     package="rtabmap_slam",
+            #     executable="rtabmap",
+            #     output="screen",
+            #     parameters=[
+            #         {
+            #             "subscribe_rgbd": True,
+            #             "rgbd_cameras": 0,
+            #             "subscribe_odom_info": True,
+            #             "subscribe_odom": True,
+            #             "approx_sync": True,
+            #             "approx_sync_max_interval": 0.05,
+            #             "database_path": "environments/rtabmap.db",
+            #             "topic_queue_size": 100,
+            #             "sync_queue_size": 100,
+            #             "Rtabmap/DetectionRate": "3",
+            #             # six degrees of freedom roll and pitch also can
+            #             "RGBD/ForceOdom3DoF": "false",
+            #             # keypoint strategy without incidence if reusing features from odom
+            #             "Kp/DetectorStrategy": "8",
+            #             "Kp/NNStrategy": "4",
+            #             "Kp/ByteToFloat": "true",
+            #             "Kp/DescriptorCaching": "true",
+            #             # publish rgbd odometry
+            #             # "RGBD/PublishOdometry": True,
+            #             # "RGBD/OptimizeFromGraphEnd": "true",
+            #             # "RGBD/Force2D": "false",
+            #             # odometry  feature REUSE  for loop closure dteetction = odometry computes keypoiçnts and features ...
+            #             "Odom/Strategy": "10",
+            #             "Mem/UseOdomFeatures": "true",
+            #             # Allow New Map Creation When Odometry Fails
+            #             "Rtabmap/CreateNewMapOnFailure": "true",
+            #             # Keep Past Maps and Allow Merging
+            #             "Rtabmap/StartNewMapOnLoopClosureDetection": "true",
+            #             "Mem/DetectSimilar": "true",
+            #             # Enable Loop Closures for Automatic Map Linking
+            #             "Rtabmap/DetectMoreLoopClosures": "true",
+            #             "Rtabmap/LoopClosureHypothesisRatio": "0.2",
+            #             # Prevent Data Loss & Optimize Memory
+            #             "Mem/NotLinkedNodesKept": "true",
+            #             "Mem/STMSize": "100",
+            #             "Mem/RehearsalSimilarity": "0.3",
+            #             "Odom/ResetCountdown": "50",
+            #             # update rgbd_cameras = 0 then map /rgbd_images to cameras/rgbd_images
+            #         }
+            #     ],
+            #     remappings=[
+            #         ("rgbd_images", "/cameras/rgbd_images"),
+            #         ("/imu", "/imu/data"),
+            #     ],
+            #     arguments=["-d", "--log-level", "debug", "--delete_db_on_start"],
+            # ),  # this deletes the previous database
+            # Node(
+            #     package="rtabmap_viz",
+            #     executable="rtabmap_viz",
+            #     output="screen",
+            #     parameters=[
+            #         {
+            #             "subscribe_rgbd": True,
+            #             "rgbd_cameras": 0,
+            #             "subscribe_odom_info": True,
+            #             "subscribe_odom": True,
+            #             "odom_frame_id": "odom",
+            #             "approx_sync": True,
+            #             "approx_sync_max_interval": 0.05,
+            #             "database_path": "environments/rtabmap.db",
+            #             "topic_queue_size": 100,
+            #             "sync_queue_size": 100,
+            #         }
+            #     ],
+            #     remappings=[
+            #         ("rgbd_images", "/cameras/rgbd_images"),
+            #     ],  # this needs to be fixed combine imus ??
+            # ),
+            # # # Compute quaternion of the IMU
         ]
     )

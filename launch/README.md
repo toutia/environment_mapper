@@ -188,20 +188,6 @@ https://github.com/introlab/rtabmap_ros/tree/humble-devel
    
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release   -DWITH_OPENGV=ON   -DCMAKE_BUILD_TYPE=Debug      -DWITH_TORCH=ON   -DWITH_ORB_SLAM=ON -DOpenCV_DIR=/usr/local/lib/cmake/opencv4     -DWITH_CUDASIFT=ON
 
-# install libtorch 
-choisir la bonne version https://download.pytorch.org/libtorch/cu126/libtorch-cxx11-abi-shared-with-deps-2.6.0%2Bcu126.zip
-https://pytorch.org/
-
-unzip libtorch-shared-with-deps-1.13.0+cu121.zip
-
-
-=bashrc 
-
-export LIBTORCH_PATH=/path/to/libtorch
-
-
-
-source ~/.bashrc  # Or `source ~/.zshrc` if you're using zsh
 
 
 
@@ -254,7 +240,8 @@ pcl_gpu_icp -h
 udate cmakelists.txt for rtapmap_util conversionss  rtabmap_slam  and  odom ..
 find_package(Boost REQUIRED COMPONENTS date_time)
 
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release   -DWITH_OPENGV=ON   -DCMAKE_BUILD_TYPE=Debug      -DWITH_TORCH=ON   -DWITH_ORB_SLAM=ON -DOpenCV_DIR=/usr/local/lib/cmake/opencv4    -DWITH_CUDASIFT=ON -DWITH_OKVIS=ON
+colcon build  --cmake-args -DCMAKE_BUILD_TYPE=Release   -DWITH_OPENGV=ON         -DWITH_OPENVINS=ON  -DOpenCV_DIR=/usr/local/lib/cmake/opencv4     -DWITH_CUDASIFT=ON   
+
 
 relasense
 
@@ -282,3 +269,36 @@ add -DUSE_SYSTEM_BRISK=ON
 
 require minimum cmake 3.10
 
+############################  kalibr docker ################################
+use this FROM arm64v8/ros:noetic-ros-base 
+in the profided docker file (kalibr source code )
+
+
+
+apt-get install -y ros-noetic-realsense2-camera
+apt-get install -y ros-noetic-rqt-image-view
+
+apt install vim 
+
+
+
+docker build -t kalibr -f Dockerfile_ros1_20_04 . # change this to whatever ubuntu version you want
+
+FOLDER=~/data/
+xhost +local:root => NO DISPLAY IS AVAILABLE INSIDE CONTAINER IF THIS IS NOT EXECUTED 
+sudo docker run -it -e "DISPLAY" -e "QT_X11_NO_MITSHM=1"  --device=/dev/bus/usb --network host    -v "/tmp/.X11-unix:/tmp/.X11-unix:rw"     -v "$FOLDER:/data" kalibr   
+
+
+
+sudo docker exec -it 84d42bb12d44 bash  => source setup.bash 
+roslaunch /data/rs_d435i.launch
+
+
+rosbag record  /camera1/color/image_raw    /camera2/color/image_raw -o /data/static.bag
+
+# fixing issue with cv_bridge 
+
+root@ubuntu:/catkin_ws# export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
+
+
+rosrun kalibr kalibr_calibrate_cameras     --bag /data/static_2025-02-18-14-37-49.bag --target /data/april_6x6.yaml     --models pinhole-radtan pinhole-radtan     --topics /camera1/color/image_raw /camera2/color/image_raw --show-extraction  --bag-freq 10
